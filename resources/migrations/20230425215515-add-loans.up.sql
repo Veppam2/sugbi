@@ -3,6 +3,7 @@ drop table catalog.book;
 create table catalog.book (
   book_id bigint generated always as identity primary key,
   title text not null,
+  isbn text not null unique,
   status smallint not null
 );
 --;;
