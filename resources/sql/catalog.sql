@@ -32,21 +32,27 @@ returning *;
 
 -- :name insert-item! :! :1
 insert into catalog.item
-(item_id, user_id) values
-(:item-id, :user-id)
+(item_id, book_id) values
+(:item-id, :book-id)
 returning *;
+
+-- :name activate-item! :! :1
+update catalog.item
+set status = true
+where item_id = :item-id;
+
+-- :name deactivate-item! :? :*
+update catalog.item
+set status = false
+where item_id = :item-id;
 
 -- :name delete-loan! :? :*
 delete from catalog.loan
 where item_id = :item-id and user_id = :user-id;
 
--- :name delete-item! :? :*
-delete from catalog.item
-where item_id = :item-id;
-
 -- :name get-user-book-loans :? :*
 select * from
-catalog.loans natural join catalog.item natural join catalog.book
+catalog.loan natural join catalog.item natural join catalog.book
 where user_id = :user-id;
 
 -- :name get-number-of-total-item-books :? :1

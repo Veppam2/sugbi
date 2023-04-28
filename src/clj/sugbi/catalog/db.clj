@@ -21,28 +21,32 @@
   (if (book-is-in-loan-table {:loan-id item-id}) true false)
 )
 
-
 (defn checkout-book [user-id book-item-id]
   (if (book-in-loan book-item-id)
     (
      (insert-loan! {:item-id book-item-id
                     :user-id user-id}
      )
-     (delete-item! {:item-id book-item-id
-                    :user-id user-id}
+     (deactivate-item! {:item-id book-item-id}
      )
     )
     "El ejemplar no está disponible"
   )
 )
 
+(checkout-book 20 20)
+
 ;;Returning a book
 (defn return-book [user-id book-item-id]
   (delete-loan! {:item-id book-item-id :user-id user-id } )
-  (insert-item! {:item-id book-item-id :user-id user-id } )
+  (activate-item! {:item-id book-item-id})
 )
+
+(return-book 12 12)
 
 ;;Get books that a user has
 (defn get-book-lendings [user-id]
   (get-user-book-loans {:user-id user-id})
 )
+
+(get-book-lendings 20)
