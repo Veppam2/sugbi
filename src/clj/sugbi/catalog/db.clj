@@ -34,7 +34,7 @@
   )
 )
 
-(checkout-book 20 20)
+;;(checkout-book 20 20)
 
 ;;Returning a book
 (defn return-book [user-id book-item-id]
@@ -42,11 +42,11 @@
   (activate-item! {:item-id book-item-id})
 )
 
-(return-book 12 12)
+;;(return-book 12 12)
 
 ;;Get books that a user has
 (defn get-book-lendings [user-id]
   (get-user-book-loans {:user-id user-id})
 )
 
-(get-book-lendings 20)
+;;(get-book-lendings 20)

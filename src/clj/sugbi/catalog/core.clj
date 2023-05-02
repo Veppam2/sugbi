@@ -44,7 +44,7 @@
      db-book-infos
      open-library-book-infos)))
 
-( get-book "El"{})
+;;( get-book "El"{})
 
 (comment"
  La salida debe ser algo como:
