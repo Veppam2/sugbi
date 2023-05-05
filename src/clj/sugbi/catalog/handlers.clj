@@ -5,6 +5,79 @@
    [sugbi.catalog.core :as catalog.core]))
 
 
+(defn librarian-get-user-loans [request]
+  (let [{:keys [_user-id] :as user-info} (get-in request [:parameters :body])
+        is-in-session? (get-in request [:session])
+        is-in-librarian-session?   (get-in request [:session :is-librarian?])
+       ]
+       (if-let [ the-session (get-in request [:session]) ]
+            (if-let [librarian-session (get-in request [:session :is-librarian?])]
+                    ()
+                    (response/forbidden (:message "User must be an admin"))
+            )
+            (response/forbidden (:message "User must have started session"))
+       )
+  )
+)
+
+(defn get-user-loans [request]
+  (let [user-id (get-in request [:parameters :path :user-id])
+        book-item-id (get-in request [:parameters :path :book-item-id] )
+        session   (get-in request [:session ])
+       ]
+       (if (some? session)
+           (response/ok  ( select-keys (catalog.db/get-book-lendings user-id)
+                                       [:isbn :title :loan_date :return_date]
+                         )
+        )
+           (response/forbidden (:message "User is not logged in"))
+       )
+  )
+)
+
+(defn remove-loan! [request]
+  (let [user-id (get-in request [:parameters :path :user-id])
+        book-item-id (get-in request [:parameters :path :book-item-id] )
+        session   (get-in request [:session ])
+       ]
+       (if (some? session)
+        (if-let [item-info (catalog.db/item-exists book-item-id ) ]
+          (if-let [item-info (catalog.db/loan-exists user-id book-item-id ) ]
+            (response/ok (select-keys (catalog.db/return-book user-id book-item-id )
+                                      [:isbn :title :loan_date :return_date]
+                         )
+            )
+            (response/conflict (:message "loan is not linked to current user"))
+          )
+          (response/not-found {:message "book-item-id not found"})
+        )
+        (response/forbidden {:message "User is not logged in"})
+      )
+  )
+)
+
+(defn insert-loan! [request]
+  (let [user-id (get-in request [:parameters :path :user-id])
+        book-item-id (get-in request [:parameters :path :book-item-id] )
+        session   (get-in request [:session ])
+       ]
+       (if ( some? session )
+        (if-let [item-info (catalog.db/item-exists book-item-id) ]
+          (if-let [loan-info (catalog.db/loan-exists user-id book-item-id  ) ]
+            (response/conflict (:message "book-item is already taken"))
+            (response/ok  (select-keys (catalog.db/checkout-book user-id book-item-id)
+                                       [:isbn :title :loan_date :return_date]
+                          )
+            )
+          )
+          (response/not-found {:message "book-item-id not found"})
+        )
+        (response/forbidden {:message "User is not logged in"})
+       )
+   )
+)
+
+
 (defn search-books
   [request]
   (if-let [criteria (get-in request [:parameters :query :q])]

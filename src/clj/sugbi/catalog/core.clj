@@ -43,17 +43,3 @@
      :isbn
      db-book-infos
      open-library-book-infos)))
-
-;;( get-book "El"{})
-
-(comment"
- La salida debe ser algo como:
-[{:isbn "asdasda" :available true}
- {:isbn "asasa", :available false},
-.
-.
-]
-
-O con número
-
-")

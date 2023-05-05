@@ -8,7 +8,6 @@
 
 (conman/bind-connection db/*db* "sql/catalog.sql")
 
-
 (defn matching-books
   [title]
   (map
@@ -16,37 +15,34 @@
    (search {:title (str "%" (str/lower-case title) "%")})))
 
 
-;;User asks for a book
 (defn book-in-loan [item-id]
   (if (book-is-in-loan-table {:loan-id item-id}) true false)
 )
 
+(defn item-exists [item-id]
+  (item-exists {:book-item-id item-id})
+)
+
+(defn item-available [item-id]
+  (item-is-available {:book-item-id item-id})
+)
+
 (defn checkout-book [user-id book-item-id]
-  (if (book-in-loan book-item-id)
-    (
      (insert-loan! {:item-id book-item-id
-                    :user-id user-id}
-     )
-     (deactivate-item! {:item-id book-item-id}
-     )
-    )
-    "El ejemplar no está disponible"
-  )
+                    :user-id user-id})
+     (deactivate-item! {:item-id book-item-id})
 )
 
-;;(checkout-book 20 20)
 
-;;Returning a book
+(defn loan-exists [user-id book-item-id]
+  (get-loan {:user-id user-id :book-item-id book-item-id } )
+)
+
 (defn return-book [user-id book-item-id]
-  (delete-loan! {:item-id book-item-id :user-id user-id } )
   (activate-item! {:item-id book-item-id})
+  (delete-loan! {:item-id book-item-id :user-id user-id } )
 )
 
-;;(return-book 12 12)
-
-;;Get books that a user has
 (defn get-book-lendings [user-id]
   (get-user-book-loans {:user-id user-id})
 )
-
-;;(get-book-lendings 20)

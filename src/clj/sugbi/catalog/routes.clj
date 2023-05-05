@@ -3,6 +3,22 @@
    [spec-tools.data-spec :as ds]
    [sugbi.catalog.handlers :as catalog.handlers]))
 
+(def loan-basic-info
+  {:isbn string?
+   :title string?
+   :start-loan string?
+   :end-loan string?
+  }
+)
+
+(def loan-full-info
+  {
+   :isbn string?
+   :title string?
+   :start-loan string?
+   :end-loan string?
+  }
+)
 
 (def basic-book-info-spec
   {:isbn  string?
@@ -37,14 +53,80 @@
                 :responses  {200 {:body basic-book-info-spec}
                              405 {:body {:message string?}}}
                 :handler    catalog.handlers/insert-book!}}]
-    ["/:isbn" {:get    {:summary    "get a book info by its isbn"
+    ["/:isbn"
+        ["" {:get    {:summary    "get a book info by its isbn"
                         :parameters {:path {:isbn string?}}
                         :responses  {200 {:body book-info-spec}
                                      404 {:body {:isbn string?}}}
-                        :handler    catalog.handlers/get-book}
+                        :handler    catalog.handlers/get-book
+                     }
                :delete {:summary    "delete a book title of the catalog"
                         :parameters {:header {:cookie string?}
                                      :path   {:isbn string?}}
                         :responses  {200 {:body {:deleted int?}}
                                      405 {:body {:message string?}}}
-                        :handler    catalog.handlers/delete-book!}}]]])
+                        :handler    catalog.handlers/delete-book!
+                       }
+             }
+        ]
+        ["/item"
+            ["/:book-item-id"
+                ["/checkout" {:post  {:summary "current session user ask for a book in :book-item-id to be lend"
+                                     :parameters {:header {:cookie string?}
+                                                  :path {:book-item-id int?
+                                                         :user-id int?
+                                                        }
+                                                 }
+                                     :responses  {200 {:body {:loan-info loan-basic-info}}
+                                                  404 {:body {:message string?}}
+                                                  409 {:body {:message string?}}
+                                                  403 {:body {:message string?}}
+                                                 }
+                                     :handler    catalog.handlers/insert-loan!
+                                     }
+                              }
+                ]
+                ["/return" {:post  { :summary "current session's user returns book-item"
+                                     :parameters {:header {:cookie string? }
+                                                  :query {(ds/opt :q) string?}
+                                                 }
+                                     :responses  {200 {:body {:loan-info loan-basic-info}}
+                                                  403 {:body {:message string?}}
+                                                  404 {:body {:message string?}}
+                                                  409 {:body {:message string?}}
+                                                 }
+                                     :handler  catalog.handlers/remove-loan!
+                                   }
+                            }
+                 ]
+             ]
+         ]
+     ]
+    ]
+    ["/user" {:swagger {:tags ["User"]}}
+        ["/lendings" {  :get {:summary  "User sees all his lend books"
+                        :parameters {:header {:cookie string?}
+                                    }
+                        :responses  {200 {:body [loan-basic-info] }
+                                     403 {:body {:message string?}}
+                                    }
+                        :handler    catalog.handlers/get-user-loans
+                        }
+                     }
+        ]
+    ]
+    ["/lendings" {:swagger {:tags ["Librarian"]}}
+        ["?user-id=:user-id" {  :get {:summary    "Librarian sees user loan books"
+                                       :parameters {:header {:cookie string?}
+                                                    :path {:user-id pos-int?}
+                                                   }
+                                       :responses  {200 {:body {:loans-list [loan-basic-info] }}
+                                                    405 {:body {:message string?} }
+                                                   }
+                                       :handler    catalog.handlers/get-user-loans
+                                       }
+                               }
+        ]
+    ]
+  ]
+)

@@ -19,10 +19,25 @@ where isbn = :isbn
 select isbn, true as "available"
 from catalog.book;
 
+-- :name get-books-all :? :*
+select * from catalog.book;
+
+-- :name insert-librarian :? :1
+insert into user_management.librarian (sub) values (:sub)
+returning *;
 
 -- :name book-is-in-loan-table :? :1
 select loan_id from catalog.loan
 where loan_id = :loan-id;
+
+-- :name item-exists :? :1
+select * from catalog.item
+where item_id = :book-item-id;
+
+-- :name item-is-available :? :1
+select * from catalog.item
+where item_id = :book-item.id
+and status = true;
 
 -- :name insert-loan! :! :1
 insert into catalog.loan
@@ -32,9 +47,12 @@ returning *;
 
 -- :name insert-item! :! :1
 insert into catalog.item
-(item_id, book_id) values
-(:item-id, :book-id)
+( book_id, state) values
+( :book-id,true)
 returning *;
+
+--:name get-items-all :? :*
+select * from catalog.item;
 
 -- :name activate-item! :! :1
 update catalog.item
@@ -45,6 +63,11 @@ where item_id = :item-id;
 update catalog.item
 set status = false
 where item_id = :item-id;
+
+-- :name get-loan :? :*
+select * from catalog.loan
+where user_id = :user-id
+and item_id = :item_id;
 
 -- :name delete-loan! :? :*
 delete from catalog.loan
