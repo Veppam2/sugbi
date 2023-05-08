@@ -3,11 +3,14 @@
    [spec-tools.data-spec :as ds]
    [sugbi.catalog.handlers :as catalog.handlers]))
 
+(defn date? [o]
+  (instance? java.time.LocalDate o)
+)
+
 (def loan-basic-info
-  {:isbn string?
-   :title string?
-   :start-loan string?
-   :end-loan string?
+  {:item-id int?
+   :start-loan date?
+   :end-loan date?
   }
 )
 
@@ -72,12 +75,11 @@
         ["/item"
             ["/:book-item-id"
                 ["/checkout" {:post  {:summary "current session user ask for a book in :book-item-id to be lend"
-                                     :parameters {:header {:cookie string?}
-                                                  :path {:book-item-id int?
-                                                         :user-id int?
-                                                        }
+                                     :parameters { :path {:book-item-id int?
+                                                          :isbn string?
+                                                         }
                                                  }
-                                     :responses  {200 {:body {:loan-info loan-basic-info}}
+                                     :responses  {200 {:body loan-basic-info}
                                                   404 {:body {:message string?}}
                                                   409 {:body {:message string?}}
                                                   403 {:body {:message string?}}

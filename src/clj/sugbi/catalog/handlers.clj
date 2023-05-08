@@ -2,7 +2,10 @@
   (:require
    [ring.util.http-response :as response]
    [sugbi.catalog.db :as catalog.db]
-   [sugbi.catalog.core :as catalog.core]))
+   [sugbi.catalog.core :as catalog.core]
+   [sugbi.auth.google.handlers :as google.handlers]
+  )
+)
 
 
 (defn librarian-get-user-loans [request]
@@ -21,13 +24,12 @@
 )
 
 (defn get-user-loans [request]
-  (let [user-id (get-in request [:parameters :path :user-id])
-        book-item-id (get-in request [:parameters :path :book-item-id] )
+  (let [user-id (get-in google.handlers/callback-data [:user-info :sub])
         session   (get-in request [:session ])
        ]
        (if (some? session)
-           (response/ok  ( select-keys (catalog.db/get-book-lendings user-id)
-                                       [:isbn :title :loan_date :return_date]
+           (response/ok  ( select-keys (catalog.db/get-user-book-loans {:user-id user-id} )
+                                       [:item_id :loan_date :return_date]
                          )
         )
            (response/forbidden (:message "User is not logged in"))
@@ -44,7 +46,7 @@
         (if-let [item-info (catalog.db/item-exists book-item-id ) ]
           (if-let [item-info (catalog.db/loan-exists user-id book-item-id ) ]
             (response/ok (select-keys (catalog.db/return-book user-id book-item-id )
-                                      [:isbn :title :loan_date :return_date]
+                                      [:item_id :loan_date :return_date]
                          )
             )
             (response/conflict (:message "loan is not linked to current user"))
@@ -57,16 +59,16 @@
 )
 
 (defn insert-loan! [request]
-  (let [user-id (get-in request [:parameters :path :user-id])
+  (let [user-id (get-in google.handlers/callback-data [:user-info :sub])
         book-item-id (get-in request [:parameters :path :book-item-id] )
         session   (get-in request [:session ])
        ]
        (if ( some? session )
-        (if-let [item-info (catalog.db/item-exists book-item-id) ]
+        (if-let [item-info (catalog.db/check-if-item-exists book-item-id) ]
           (if-let [loan-info (catalog.db/loan-exists user-id book-item-id  ) ]
             (response/conflict (:message "book-item is already taken"))
             (response/ok  (select-keys (catalog.db/checkout-book user-id book-item-id)
-                                       [:isbn :title :loan_date :return_date]
+                                       [:item_id :loan_date :return_date]
                           )
             )
           )

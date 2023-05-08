@@ -16,12 +16,18 @@
 (def available-fields olb/relevant-fields)
 
 
+
+;;(db/get-items-all)
+;;(db/get-books-all {})
+;;(db/get-librarians-all {})
+;;(db/get-loans-all {})
+
+
 (defn get-book
   [isbn fields]
   (when-let [db-book (db/get-book {:isbn isbn})]
     (let [open-library-book-info (olb/book-info isbn fields)]
       (merge db-book open-library-book-info))))
-
 
 (defn get-books
   [fields]
